@@ -1,9 +1,13 @@
 const db = require("../models/index.js");
+let configOptions = {
+  raw: true,
+  nest: true,
+  benchmark: true,
+  order: [["id", "ASC"]],
+};
 
 const getVaultsByFriendId = async (friendId) => {
   const data = await db.Vault.findAll({
-    raw: true,
-    nest: true,
     attributes: ["id", "key", "location", "updatedAt"],
     include: [
       {
@@ -12,7 +16,7 @@ const getVaultsByFriendId = async (friendId) => {
         attributes: [],
       },
     ],
-    order: [["id", "ASC"]],
+    ...configOptions,
   });
 
   return data;
@@ -20,14 +24,29 @@ const getVaultsByFriendId = async (friendId) => {
 
 const getAllVaults = async () => {
   const data = await db.Vault.findAll({
-    raw: true,
-    nest: true,
     attributes: ["id", "key", "location"],
-    order: [["id", "ASC"]],
+    ...configOptions,
   });
 
   return data;
 };
 
+const createVault = async (userId, key, coordinates) => {
+  const point = { type: "Point", coordinates: coordinates };
+  // Create vault
+  const vaultData = await db.Vault.create({
+    key: key,
+    location: point,
+  });
+  // Create membership when creating vault
+  await db.VaultFriend.create({
+    vaultId: vaultData.id,
+    friendId: userId,
+  });
+
+  return vaultData;
+};
+
 exports.getVaultsByFriendId = getVaultsByFriendId;
 exports.getAllVaults = getAllVaults;
+exports.createVault = createVault;

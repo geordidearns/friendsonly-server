@@ -45,6 +45,17 @@ app.get("/vaults", async (req, res) => {
   res.json({ data: data });
 });
 
+// POST Create a vault (and add member to that vault)
+app.post("/vaults", async (req, res) => {
+  const coordinates = [req.body.latitude, req.body.longitude];
+  let data = await vault.createVault(
+    req.body.userId,
+    req.body.key,
+    coordinates
+  );
+  res.json({ data: data });
+});
+
 async function assertDatabaseConnectionOk() {
   console.log(`Checking database connection...`);
   try {

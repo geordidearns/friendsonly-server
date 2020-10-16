@@ -1,9 +1,13 @@
 const db = require("../models/index.js");
+let configOptions = {
+  raw: true,
+  nest: true,
+  benchmark: true,
+  order: [["id", "ASC"]],
+};
 
 const getFriendsByVaultId = async (vaultId) => {
   const data = await db.Friend.findAll({
-    raw: true,
-    nest: true,
     attributes: ["id", "email", "key"],
     include: [
       {
@@ -12,7 +16,7 @@ const getFriendsByVaultId = async (vaultId) => {
         attributes: [],
       },
     ],
-    order: [["id", "ASC"]],
+    ...configOptions,
   });
 
   return data;
@@ -20,10 +24,8 @@ const getFriendsByVaultId = async (vaultId) => {
 
 const getAllFriends = async () => {
   const data = await db.Friend.findAll({
-    raw: true,
-    nest: true,
     attributes: ["id", "email", "key"],
-    order: [["id", "ASC"]],
+    ...configOptions,
   });
 
   return data;
