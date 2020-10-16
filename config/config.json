@@ -7,17 +7,13 @@
     "dialect": "postgres"
   },
   "test": {
-    "username": "root",
-    "password": null,
-    "database": "friendsonly_test",
-    "host": "127.0.0.1",
+    "username": "hcpaphscneslpm",
+    "password": "77927216d8b73adda0090653ef82eeb9cadf49599c05881cd00259393babcf2b",
+    "database": "dc6tl34qlgr85f",
+    "host": "ec2-54-217-213-79.eu-west-1.compute.amazonaws.com",
     "dialect": "postgres"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "friendsonly_production",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "use_env_variable": "DATABASE_URL"
   }
 }
