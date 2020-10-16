@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// simple route
+// GET Members of a specific vault
 app.get("/vaults/:vaultId/friends", async (req, res) => {
   const data = await db.Friend.findAll({
     raw: true,

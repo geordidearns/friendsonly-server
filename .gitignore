@@ -1,0 +1,25 @@
+# NODE
+.node_modules
+node_modules
+*/node_modules
+/node_modules/*
+
+#----------------------------------------------------------------------------
+# MISC
+#----------------------------------------------------------------------------
+.*cache
+*.log
+cache/*
+backup
+_files
+log
+log/**/*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# dotenv environment variables file
+.env
+.env.test
