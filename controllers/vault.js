@@ -131,13 +131,11 @@ const validateVaultInviteQRCode = async (vaultId, vaultKey, friendId) => {
   try {
     const vault = await getVaultById(vaultId);
     console.log("VAULT KEY", vault.key, vaultKey);
-    // if (vault.key === vaultKey) {
-    //   throw Error;
-    // }
-    console.log("ADDING MEMBER");
-    await addMemberToVault(vault.id, friendId);
+    if (vault.key === vaultKey) {
+      throw Error;
+    }
 
-    return;
+    await addMemberToVault(vault.id, friendId);
   } catch (err) {
     throw Error(err);
   }
