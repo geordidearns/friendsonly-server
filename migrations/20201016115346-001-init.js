@@ -28,6 +28,11 @@ module.exports = {
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
+    await queryInterface.addIndex("Vaults", {
+      fields: ["location"],
+      concurrently: true,
+      type: "SPATIAL",
+    });
     await queryInterface.createTable("Friends", {
       id: {
         allowNull: false,
@@ -115,6 +120,10 @@ module.exports = {
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
+    await queryInterface.addIndex("VaultFriends", {
+      fields: ["vaultId", "friendId"],
+      concurrently: true,
+    });
     await queryInterface.createTable("VaultAssets", {
       id: {
         allowNull: false,
@@ -148,6 +157,10 @@ module.exports = {
       },
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
+    });
+    await queryInterface.addIndex("VaultAssets", {
+      fields: ["vaultId", "assetId"],
+      concurrently: true,
     });
   },
 

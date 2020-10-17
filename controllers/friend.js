@@ -31,5 +31,17 @@ const getAllFriends = async () => {
   return data;
 };
 
+const createMember = async (issuer, email, key) => {
+  // Create member
+  const memberData = await db.Friend.create({
+    issuer,
+    email,
+    key,
+  });
+
+  return memberData;
+};
+
 exports.getFriendsByVaultId = getFriendsByVaultId;
 exports.getAllFriends = getAllFriends;
+exports.createMember = createMember;

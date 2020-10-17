@@ -33,6 +33,16 @@ app.get("/friends", async (req, res) => {
   res.json({ data: data });
 });
 
+// POST Create a member
+app.post("/members", async (req, res) => {
+  let data = await friend.createMember(
+    req.body.issuer,
+    req.body.email,
+    req.body.key
+  );
+  res.json({ data: data });
+});
+
 // GET Vaults of a specific friend
 app.get("/friends/:friendId/vaults", async (req, res) => {
   let data = await vault.getVaultsByFriendId(req.params.friendId);
