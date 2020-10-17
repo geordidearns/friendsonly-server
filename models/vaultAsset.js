@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class VaultFriend extends Model {
+  class VaultAsset extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {}
   }
-  VaultFriend.init(
+  VaultAsset.init(
     {
       vaultId: {
         type: DataTypes.INTEGER,
@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
           key: "vaultId",
         },
       },
-      friendId: {
+      assetId: {
         type: DataTypes.INTEGER,
         unique: false,
         allowNull: false,
@@ -31,8 +31,8 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
         references: {
-          model: "Friends",
-          key: "friendId",
+          model: "Assets",
+          key: "assetId",
         },
       },
       createdAt: DataTypes.DATE,
@@ -40,8 +40,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "VaultFriend",
+      modelName: "VaultAsset",
     }
   );
-  return VaultFriend;
+  return VaultAsset;
 };

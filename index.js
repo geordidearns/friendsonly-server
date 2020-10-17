@@ -47,7 +47,7 @@ app.get("/vaults", async (req, res) => {
 
 // GET Closest Vault to Friend
 app.get("/vaults/nearby", async (req, res) => {
-  let data = await vault.getClosestVaultByLocation({
+  let data = await vault.getClosestVaultById(req.query.friendId, {
     latitude: req.query.latitude,
     longitude: req.query.longitude,
   });

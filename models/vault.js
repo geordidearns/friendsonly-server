@@ -15,16 +15,17 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         },
       });
+      Vault.belongsToMany(models.Asset, {
+        through: "VaultAsset",
+        foreignKey: {
+          name: "vaultId",
+          allowNull: false,
+        },
+      });
     }
   }
   Vault.init(
     {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: DataTypes.INTEGER,
-      },
       key: {
         type: DataTypes.UUID,
         unique: true,

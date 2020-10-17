@@ -63,6 +63,24 @@ module.exports = {
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
+    await queryInterface.createTable("Assets", {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
+      text: {
+        type: Sequelize.STRING,
+        unique: false,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      createdAt: Sequelize.DATE,
+      updatedAt: Sequelize.DATE,
+    });
     await queryInterface.createTable("VaultFriends", {
       id: {
         allowNull: false,
@@ -97,11 +115,47 @@ module.exports = {
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
+    await queryInterface.createTable("VaultAssets", {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
+      vaultId: {
+        type: Sequelize.INTEGER,
+        unique: false,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+        references: {
+          model: "Vaults",
+          key: "id",
+        },
+      },
+      assetId: {
+        type: Sequelize.INTEGER,
+        unique: false,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+        references: {
+          model: "Assets",
+          key: "id",
+        },
+      },
+      createdAt: Sequelize.DATE,
+      updatedAt: Sequelize.DATE,
+    });
   },
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("Vaults");
     await queryInterface.dropTable("VaultFriends");
     await queryInterface.dropTable("Friends");
+    await queryInterface.dropTable("Assets");
+    await queryInterface.dropTable("VaultAssets");
   },
 };

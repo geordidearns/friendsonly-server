@@ -1,45 +1,28 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class Friend extends Model {
+  class Asset extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Friend.belongsToMany(models.Vault, {
-        through: "VaultFriend",
+      Asset.belongsTo(models.Vault, {
+        through: "VaultAsset",
         foreignKey: {
-          name: "friendId",
+          name: "assetId",
           allowNull: false,
         },
         onDelete: "CASCADE",
       });
     }
   }
-  Friend.init(
+  Asset.init(
     {
-      issuer: {
+      text: {
         type: DataTypes.STRING,
-        unique: true,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      email: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      lastLoginAt: DataTypes.STRING,
-      key: {
-        type: DataTypes.UUID,
-        unique: true,
+        unique: false,
         allowNull: false,
         validate: {
           notEmpty: true,
@@ -50,8 +33,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "Friend",
+      modelName: "Asset",
     }
   );
-  return Friend;
+  return Asset;
 };
