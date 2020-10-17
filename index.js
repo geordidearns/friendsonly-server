@@ -12,23 +12,22 @@ const vault = require("./controllers/vault");
 var corsOptions = {
   origin: "http://localhost:8081",
 };
-
 app.use(cors(corsOptions));
-
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
-
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
+////////// Members //////////
+
 // GET Members of a specific vault
-app.get("/vaults/:vaultId/friends", async (req, res) => {
+app.get("/vaults/:vaultId/members", async (req, res) => {
   let data = await friend.getFriendsByVaultId(req.params.vaultId);
   res.json({ data: data });
 });
 
 // GET all Members
-app.get("/friends", async (req, res) => {
+app.get("/members", async (req, res) => {
   let data = await friend.getAllFriends();
   res.json({ data: data });
 });
@@ -43,13 +42,44 @@ app.post("/members", async (req, res) => {
   res.json({ data: data });
 });
 
+////////// Vaults //////////
+
+// TODO: GET Vault by ID (Not used external facing yet)
+app.get("/vaults/:vaultId", async (req, res) => {
+  let data = await vault.getVaultById(req.params.vaultId);
+  res.json({ data: data });
+});
+
+// GET QRCode to invite member
+app.get("/vaults/member/invite", async (req, res) => {
+  let data = await vault.getVaultInviteQRCode(
+    req.query.vaultId,
+    req.query.vaultKey
+  );
+  res.json({ data: data });
+});
+
+// POST Validate QRCode to invite member
+app.post("/vaults/member/validate", async (req, res) => {
+  try {
+    const data = await vault.validateVaultInviteQRCode(
+      req.body.vaultId,
+      req.body.vaultKey
+    );
+    console.log("GOOD HERE");
+    res.json({ data: data });
+  } catch (err) {
+    res.status(400).send("QR Code has been used before");
+  }
+});
+
 // GET Vaults of a specific friend
 app.get("/friends/:friendId/vaults", async (req, res) => {
   let data = await vault.getVaultsByFriendId(req.params.friendId);
   res.json({ data: data });
 });
 
-// GET all Vaults
+// TODO: GET all Vaults
 app.get("/vaults", async (req, res) => {
   let data = await vault.getAllVaults();
   res.json({ data: data });
@@ -72,6 +102,12 @@ app.post("/vaults", async (req, res) => {
     req.body.key,
     coordinates
   );
+  res.json({ data: data });
+});
+
+// Add a member to a vault
+app.post("/vaults/members", async (req, res) => {
+  let data = await vault.addMemberToVault(req.body.vaultId, req.body.friendId);
   res.json({ data: data });
 });
 
