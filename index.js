@@ -45,6 +45,15 @@ app.get("/vaults", async (req, res) => {
   res.json({ data: data });
 });
 
+// GET Closest Vault to Friend
+app.get("/vaults/nearby", async (req, res) => {
+  let data = await vault.getClosestVaultByLocation({
+    latitude: req.query.latitude,
+    longitude: req.query.longitude,
+  });
+  res.json({ data: data });
+});
+
 // POST Create a vault (and add member to that vault)
 app.post("/vaults", async (req, res) => {
   const coordinates = [req.body.latitude, req.body.longitude];

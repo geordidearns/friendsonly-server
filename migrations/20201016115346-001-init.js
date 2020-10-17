@@ -18,7 +18,7 @@ module.exports = {
         },
       },
       location: {
-        type: Sequelize.GEOMETRY("POINT", 4326),
+        type: Sequelize.GEOGRAPHY("POINT", 4326),
         unique: false,
         allowNull: false,
         validate: {

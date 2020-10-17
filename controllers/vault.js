@@ -22,6 +22,24 @@ const getVaultsByFriendId = async (friendId) => {
   return data;
 };
 
+// Pass in latitude and longitude from client in query params
+const getClosestVaultByLocation = async (coordinates) => {
+  const data = await db.sequelize.query(
+    `select *, ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography) from "Vaults" where ST_DWithin(location, ST_MakePoint(:latitude,:longitude)::geography, :range) order by ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography) limit :limit;`,
+    {
+      replacements: {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        range: 80,
+        limit: 5,
+      },
+      ...configOptions,
+    }
+  );
+
+  return data;
+};
+
 const getAllVaults = async () => {
   const data = await db.Vault.findAll({
     attributes: ["id", "key", "location"],
@@ -50,3 +68,4 @@ const createVault = async (userId, key, coordinates) => {
 exports.getVaultsByFriendId = getVaultsByFriendId;
 exports.getAllVaults = getAllVaults;
 exports.createVault = createVault;
+exports.getClosestVaultByLocation = getClosestVaultByLocation;
