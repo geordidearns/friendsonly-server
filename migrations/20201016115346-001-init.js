@@ -56,15 +56,7 @@ module.exports = {
           notEmpty: true,
         },
       },
-      lastLoginAt: Sequelize.STRING,
-      key: {
-        type: Sequelize.UUID,
-        unique: true,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
+      lastLoginAt: Sequelize.INTEGER,
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });

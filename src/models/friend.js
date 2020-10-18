@@ -36,15 +36,7 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
-      lastLoginAt: DataTypes.STRING,
-      key: {
-        type: DataTypes.UUID,
-        unique: true,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
+      lastLoginAt: DataTypes.INTEGER,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
