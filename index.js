@@ -70,7 +70,7 @@ app.post("/vaults/member/validate", async (req, res) => {
 
     return res.json({ data: data });
   } catch (err) {
-    res.status(400).send("QR Code has been used before");
+    res.status(400).send(err);
   }
 });
 

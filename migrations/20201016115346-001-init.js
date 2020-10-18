@@ -90,7 +90,6 @@ module.exports = {
       id: {
         allowNull: false,
         autoIncrement: true,
-        primaryKey: true,
         type: Sequelize.INTEGER,
       },
       vaultId: {
@@ -120,8 +119,13 @@ module.exports = {
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
-    await queryInterface.addIndex("VaultFriends", {
+    await queryInterface.addConstraint("VaultFriends", {
       fields: ["vaultId", "friendId"],
+      type: "primary key",
+      name: "vaultFriendId_pkey",
+    });
+    await queryInterface.addIndex("VaultFriends", {
+      fields: ["id"],
       concurrently: true,
     });
     await queryInterface.createTable("VaultAssets", {

@@ -103,12 +103,16 @@ const createVault = async (userId, key, coordinates) => {
 };
 
 const addMemberToVault = async (vaultId, friendId) => {
-  const data = await db.VaultFriend.create({
-    vaultId: vaultId,
-    friendId: friendId,
-  });
+  try {
+    const data = await db.VaultFriend.create({
+      vaultId: vaultId,
+      friendId: friendId,
+    });
 
-  return data;
+    return data;
+  } catch (err) {
+    throw "Member is already in this vault";
+  }
 };
 
 const getVaultInviteQRCode = async (vaultId, vaultKey) => {
@@ -130,14 +134,13 @@ const getVaultInviteQRCode = async (vaultId, vaultKey) => {
 const validateVaultInviteQRCode = async (vaultId, vaultKey, friendId) => {
   try {
     const vault = await getVaultById(vaultId);
-    console.log("VAULT KEY", vault.key, vaultKey);
     if (vault.key === vaultKey) {
-      throw Error;
+      throw "QR Code has been used before";
     }
 
     await addMemberToVault(vault.id, friendId);
   } catch (err) {
-    throw Error(err);
+    throw err;
   }
 };
 
