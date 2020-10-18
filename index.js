@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const { v4: uuidv4 } = require("uuid");
 const app = express();
 const db = require("./models/index.js");
 const PORT = 8080;
@@ -22,24 +23,34 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // GET Members of a specific vault
 app.get("/vaults/:vaultId/members", async (req, res) => {
-  let data = await friend.getFriendsByVaultId(req.params.vaultId);
-  res.json({ data: data });
+  const { vaultId } = req.params;
+  try {
+    let data = await friend.getFriendsByVaultId(vaultId);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(404).send({ error: err });
+  }
 });
 
 // GET all Members
 app.get("/members", async (req, res) => {
-  let data = await friend.getAllFriends();
-  res.json({ data: data });
+  try {
+    let data = await friend.getAllFriends();
+    res.json({ data: data });
+  } catch (err) {
+    res.status(404).send({ error: err });
+  }
 });
 
 // POST Create a member
 app.post("/members", async (req, res) => {
-  let data = await friend.createMember(
-    req.body.issuer,
-    req.body.email,
-    req.body.key
-  );
-  res.json({ data: data });
+  const { issuer, email, key } = req.body;
+  try {
+    let data = await friend.createMember(issuer, email, key);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(400).send({ error: err });
+  }
 });
 
 ////////// Vaults //////////
@@ -47,44 +58,58 @@ app.post("/members", async (req, res) => {
 // TODO: GET Vault by ID (Not used external facing yet)
 app.get("/vaults/:vaultId", async (req, res) => {
   const { vaultId } = req.params;
-  const data = await vault.getVaultById(vaultId);
-  res.json({ data: data });
+  try {
+    const data = await vault.getVaultById(vaultId);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(404).send({ error: err });
+  }
 });
 
 // GET QRCode to invite member
 app.get("/vaults/member/invite", async (req, res) => {
   const { vaultId, vaultKey } = req.query;
-  const data = await vault.getVaultInviteQRCode(vaultId, vaultKey);
-  res.json({ data: data });
+  try {
+    const data = await vault.getVaultInviteQRCode(vaultId, vaultKey);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(400).send({ error: err });
+  }
 });
 
 // POST Validate QRCode to invite member
 app.post("/vaults/member/validate", async (req, res) => {
   try {
     const { vaultId, vaultKey, friendId } = req.body;
-    const data = await vault.validateVaultInviteQRCode(
-      vaultId,
-      vaultKey,
-      friendId
-    );
+    await vault.validateVaultInviteQRCode(vaultId, vaultKey, friendId);
 
-    return res.json({ data: data });
+    return res.json({
+      data: { message: "Member has been added to the vault" },
+    });
   } catch (err) {
-    res.status(400).send(err);
+    res.status(400).send({ error: err });
   }
 });
 
 // GET Vaults of a specific friend
 app.get("/friends/:friendId/vaults", async (req, res) => {
   const { friendId } = req.params;
-  const data = await vault.getVaultsByFriendId(friendId);
-  res.json({ data: data });
+  try {
+    const data = await vault.getVaultsByFriendId(friendId);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(404).send({ error: err });
+  }
 });
 
 // TODO: GET all Vaults (Maybe not needed client facing)
 app.get("/vaults", async (req, res) => {
-  const data = await vault.getAllVaults();
-  res.json({ data: data });
+  try {
+    const data = await vault.getAllVaults();
+    res.json({ data: data });
+  } catch (err) {
+    res.status(404).send({ error: err });
+  }
 });
 
 // GET Closest Vault to Friend
@@ -99,17 +124,26 @@ app.get("/vaults/member/nearby", async (req, res) => {
 
 // POST Create a vault (and add member to that vault)
 app.post("/vaults", async (req, res) => {
-  const { latitude, longitude, userId, key } = req.body;
+  const { latitude, longitude, userId } = req.body;
+  const key = uuidv4();
   const coordinates = [latitude, longitude];
-  const data = await vault.createVault(userId, key, coordinates);
-  res.json({ data: data });
+  try {
+    const data = await vault.createVault(userId, key, coordinates);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(404).send({ error: "Member cannot be found" });
+  }
 });
 
 // Add a member to a vault
 app.post("/vaults/members", async (req, res) => {
   const { vaultId, friendId } = req.body;
-  const data = await vault.addMemberToVault(vaultId, friendId);
-  res.json({ data: data });
+  try {
+    const data = await vault.addMemberToVault(vaultId, friendId);
+    res.json({ data: data });
+  } catch (err) {
+    res.status(400).send({ error: err });
+  }
 });
 
 async function assertDatabaseConnectionOk() {
