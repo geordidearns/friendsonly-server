@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const bodyParser = require("body-parser");
 const passport = require("passport");
 const { Magic } = require("@magic-sdk/admin");
 const MagicStrategy = require("passport-magic").Strategy;
+const logger = require("../config/logger.js");
+// Middleware to use for locking endpoints
+const isAuthenticated = require("./utils/isAuthenticated");
 
 const friend = require("../controllers/friend");
 
@@ -11,21 +13,25 @@ const friend = require("../controllers/friend");
 const magic = new Magic("sk_test_181E705F674542C3");
 
 /* 2️⃣ Implement Auth Strategy */
-
 const strategy = new MagicStrategy(async (user, done) => {
   const userMetadata = await magic.users.getMetadataByIssuer(user.issuer);
   const existingUser = await friend.findMemberByIssuer(user.issuer);
   if (!existingUser) {
     /* Create new user if doesn't exist */
+    logger.log({
+      level: "info",
+      message: "New member",
+    });
     return signup(user, userMetadata, done);
   } else {
     /* Login user if otherwise */
+    logger.log({
+      level: "info",
+      message: "Existing member",
+    });
     return login(user, done);
   }
 });
-
-router.use(bodyParser.urlencoded({ extended: false }));
-router.use(bodyParser.json());
 
 /* calls our MagicStrategy when a user logs in */
 passport.use(strategy);
@@ -34,22 +40,33 @@ passport.use(strategy);
 
 /* create a new user in the database */
 const signup = async (user, userMetadata, done) => {
-  console.log("PASSPORT SIGNUP USER");
+  logger.log({
+    level: "info",
+    message: "Member signup",
+  });
   const newUser = await friend.createMember(
     user.issuer,
     userMetadata.email,
     user.claim.iat
   );
+  logger.log({
+    level: "info",
+    message: "Member created",
+  });
   return done(null, newUser);
 };
 
 /* update user's lastLoginAt time in database */
 const login = async (user, done) => {
-  console.log("PASSPORT LOGIN USER");
+  logger.log({
+    level: "info",
+    message: "Member login",
+  });
   /* Replay attack protection (https://go.magic.link/replay-attack) */
   if (user.claim.iat <= user.lastLoginAt) {
+    MemberAuth.error("Replay attack detected for member");
     return done(null, false, {
-      message: `Replay attack detected for user ${user.issuer}}.`,
+      message: `Replay attack detected for member ${user.issuer}}.`,
     });
   }
   await friend.updateMemberByIssuer(
@@ -59,6 +76,10 @@ const login = async (user, done) => {
     },
     true
   );
+  logger.log({
+    level: "info",
+    message: "Member verified",
+  });
   return done(null, user);
 };
 
@@ -66,7 +87,6 @@ const login = async (user, done) => {
 
 /* Defines what data/cookies are stored in the user session */
 passport.serializeUser((user, done) => {
-  console.log("IN SERIALIZE", user);
   done(null, user);
 });
 
@@ -74,24 +94,18 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (user, done) => {
   try {
     const newUser = await friend.findMemberByIssuer(user.issuer);
-    console.log("IN DESERIALIZE", newUser);
     done(null, newUser);
   } catch (err) {
     done(err, null);
   }
 });
 
-/* route to check if the user is authenticated */
-router.get("/member/check", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ authorized: false });
-  } else {
-    return res.json({ authorized: true, user: req.user });
-  }
-});
-
 /* Attach middleware to login endpoint */
 router.post("/login", passport.authenticate("magic"), async (req, res) => {
+  logger.log({
+    level: "info",
+    message: "Member logging in",
+  });
   /* strip token from Authorization header */
   let DIDT = req.headers.authorization.split(" ")[1];
 
@@ -126,14 +140,99 @@ router.post("/login", passport.authenticate("magic"), async (req, res) => {
    * }
    */
   const userMetadata = await magic.users.getMetadataByIssuer(claim.iss);
-
   /* send back response with user obj */
+  logger.log({
+    level: "info",
+    message: "Member authenticated",
+  });
   return res.json({ authorized: true, user: userMetadata });
 });
 
+/* route to check if the user is authenticated */
+router.get("/check", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    logger.log({
+      level: "info",
+      message: "Member not authenticated",
+    });
+    return res.status(401).json({ authorized: false, error: "Not authorized" });
+  } else {
+    logger.log({
+      level: "info",
+      message: "Member authenticated",
+    });
+    return res.json({ authorized: true, user: req.user });
+  }
+});
+
 router.get("/logout", (req, res) => {
-  req.logout();
-  return res.json({ authorized: false });
+  logger.log({
+    level: "info",
+    message: "Member logging out",
+  });
+  req.session.destroy((err) => {
+    logger.log({
+      level: "info",
+      message: "Member logged out",
+    });
+    return res.json({ authorized: false });
+  });
+});
+
+// GET all Members [Not for external use]
+router.get("/all", async (req, res) => {
+  try {
+    let data = await friend.getAllFriends();
+    logger.log({
+      level: "info",
+      message: "Fetched all members",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "info",
+      message: `Failed to fetch all members: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
+// POST Create a member
+router.post("/join", async (req, res) => {
+  const { issuer, email, key } = req.body;
+  try {
+    let data = await friend.createMember(issuer, email, key);
+    logger.log({
+      level: "info",
+      message: "Created a member",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to create a member: ${err}`,
+    });
+    res.status(400).send({ error: err });
+  }
+});
+
+// GET Vaults of a specific member
+router.get("/:friendId/vaults", async (req, res) => {
+  const { friendId } = req.params;
+  try {
+    const data = await vault.getVaultsByFriendId(friendId);
+    logger.log({
+      level: "info",
+      message: "Fetched vaults for a specific member",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to vaults for a specific member: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
 });
 
 module.exports = router;
