@@ -124,6 +124,9 @@ const updateVaultKey = async (vaultId, newKey) => {
 
 const createVault = async (userId, key, coordinates) => {
   const point = { type: "Point", coordinates: coordinates };
+  if (_.isEmpty(coordinates)) {
+    throw "Unable to create Vault - No coordinates present";
+  }
   try {
     // Create Vault & add creating Member (Does not create vault if no Member)
     const result = await db.sequelize.transaction(async (t) => {
@@ -147,12 +150,15 @@ const createVault = async (userId, key, coordinates) => {
 
     return result;
   } catch (err) {
-    throw err;
+    throw "Vault cannot be created";
   }
 };
 
 const addMemberToVault = async (vaultId, friendId) => {
   try {
+    if (!vaultId || !friendId) {
+      throw "Incorrect parameters passed to add a member to a vault";
+    }
     return await db.VaultFriend.create({
       vaultId: vaultId,
       friendId: friendId,
@@ -171,6 +177,7 @@ const getVaultInviteQRCode = async (vaultId, vaultKey) => {
     if (!vaultId || !vaultKey) {
       throw "Incorrect parameters passed to generate QR Code";
     }
+    await getVaultById(vaultId);
     const data = await QRCode.toDataURL(`id=${vaultId}&key=${vaultKey}`);
     if (_.isEmpty(data)) {
       throw "Failed to generate QR Code";
