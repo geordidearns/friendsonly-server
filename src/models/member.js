@@ -1,24 +1,24 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class Friend extends Model {
+  class Member extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Friend.belongsToMany(models.Vault, {
-        through: "VaultFriend",
+      Member.belongsToMany(models.Vault, {
+        through: "VaultMember",
         foreignKey: {
-          name: "friendId",
+          name: "memberId",
           allowNull: false,
         },
         onDelete: "CASCADE",
       });
     }
   }
-  Friend.init(
+  Member.init(
     {
       issuer: {
         type: DataTypes.STRING,
@@ -42,8 +42,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "Friend",
+      modelName: "Member",
     }
   );
-  return Friend;
+  return Member;
 };

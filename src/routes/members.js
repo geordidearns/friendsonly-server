@@ -7,7 +7,8 @@ const logger = require("../config/logger.js");
 // Middleware to use for locking endpoints
 const isAuthenticated = require("./utils/isAuthenticated");
 
-const friend = require("../controllers/friend");
+const member = require("../controllers/member");
+const vault = require("../controllers/vault");
 
 /* 1️⃣ Setup Magic Admin SDK */
 const magic = new Magic("sk_test_181E705F674542C3");
@@ -15,7 +16,7 @@ const magic = new Magic("sk_test_181E705F674542C3");
 /* 2️⃣ Implement Auth Strategy */
 const strategy = new MagicStrategy(async (user, done) => {
   const userMetadata = await magic.users.getMetadataByIssuer(user.issuer);
-  const existingUser = await friend.findMemberByIssuer(user.issuer);
+  const existingUser = await member.findMemberByIssuer(user.issuer);
   if (!existingUser) {
     /* Create new user if doesn't exist */
     logger.log({
@@ -44,7 +45,7 @@ const signup = async (user, userMetadata, done) => {
     level: "info",
     message: "Member signup",
   });
-  const newUser = await friend.createMember(
+  const newUser = await member.createMember(
     user.issuer,
     userMetadata.email,
     user.claim.iat
@@ -69,7 +70,7 @@ const login = async (user, done) => {
       message: `Replay attack detected for member ${user.issuer}}.`,
     });
   }
-  await friend.updateMemberByIssuer(
+  await member.updateMemberByIssuer(
     user.issuer,
     {
       lastLoginAt: user.claim.iat,
@@ -93,7 +94,7 @@ passport.serializeUser((user, done) => {
 /* Populates user data in the req.user object */
 passport.deserializeUser(async (user, done) => {
   try {
-    const newUser = await friend.findMemberByIssuer(user.issuer);
+    const newUser = await member.findMemberByIssuer(user.issuer);
     done(null, newUser);
   } catch (err) {
     done(err, null);
@@ -182,7 +183,7 @@ router.get("/logout", (req, res) => {
 // GET all Members [Not for external use]
 router.get("/all", async (req, res) => {
   try {
-    let data = await friend.getAllFriends();
+    let data = await member.getAllMembers();
     logger.log({
       level: "info",
       message: "Fetched all members",
@@ -201,7 +202,7 @@ router.get("/all", async (req, res) => {
 router.post("/join", async (req, res) => {
   const { issuer, email, key } = req.body;
   try {
-    let data = await friend.createMember(issuer, email, key);
+    let data = await member.createMember(issuer, email, key);
     logger.log({
       level: "info",
       message: "Created a member",
@@ -217,10 +218,10 @@ router.post("/join", async (req, res) => {
 });
 
 // GET Vaults of a specific member
-router.get("/:friendId/vaults", async (req, res) => {
-  const { friendId } = req.params;
+router.get("/:memberId/vaults", async (req, res) => {
+  const { memberId } = req.params;
   try {
-    const data = await vault.getVaultsByFriendId(friendId);
+    const data = await vault.getVaultsByMemberId(memberId);
     logger.log({
       level: "info",
       message: "Fetched vaults for a specific member",

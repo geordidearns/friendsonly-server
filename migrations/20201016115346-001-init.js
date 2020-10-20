@@ -45,7 +45,7 @@ module.exports = {
       concurrently: true,
       type: "SPATIAL",
     });
-    await queryInterface.createTable("Friends", {
+    await queryInterface.createTable("Members", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -114,7 +114,7 @@ module.exports = {
         },
       },
     });
-    await queryInterface.createTable("VaultFriends", {
+    await queryInterface.createTable("VaultMembers", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -132,7 +132,7 @@ module.exports = {
           key: "id",
         },
       },
-      friendId: {
+      memberId: {
         type: Sequelize.INTEGER,
         unique: false,
         allowNull: false,
@@ -140,7 +140,7 @@ module.exports = {
           notEmpty: true,
         },
         references: {
-          model: "Friends",
+          model: "Members",
           key: "id",
         },
       },
@@ -159,12 +159,12 @@ module.exports = {
         },
       },
     });
-    await queryInterface.addConstraint("VaultFriends", {
-      fields: ["vaultId", "friendId"],
+    await queryInterface.addConstraint("VaultMembers", {
+      fields: ["vaultId", "memberId"],
       type: "primary key",
-      name: "vaultFriendId_pkey",
+      name: "vaultMemberId_pkey",
     });
-    await queryInterface.addIndex("VaultFriends", {
+    await queryInterface.addIndex("VaultMembers", {
       fields: ["id"],
       concurrently: true,
     });
@@ -260,8 +260,8 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("Vaults");
-    await queryInterface.dropTable("VaultFriends");
-    await queryInterface.dropTable("Friends");
+    await queryInterface.dropTable("VaultMembers");
+    await queryInterface.dropTable("Members");
     await queryInterface.dropTable("Assets");
     await queryInterface.dropTable("VaultAssets");
   },
