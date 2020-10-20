@@ -7,6 +7,7 @@ const isAuthenticated = require("./utils/isAuthenticated");
 
 const vault = require("../controllers/vault");
 const member = require("../controllers/member");
+const asset = require("../controllers/asset");
 
 // TODO: GET all Vaults (Not used external facing)
 router.get("/all", async (req, res) => {
@@ -45,7 +46,7 @@ router.get("/:vaultId", async (req, res) => {
   }
 });
 
-// GET QRCode to invite member
+// GET Create QRCode to invite member
 router.get("/member/invite", async (req, res) => {
   const { vaultId, vaultKey } = req.query;
   try {
@@ -109,11 +110,11 @@ router.get("/member/nearby", async (req, res) => {
 
 // POST Create a vault (and add member to that vault)
 router.post("/create", async (req, res) => {
-  const { latitude, longitude, userId } = req.body;
+  const { latitude, longitude, memberId } = req.body;
   const key = uuidv4();
   const coordinates = [latitude, longitude];
   try {
-    const data = await vault.createVault(userId, key, coordinates);
+    const data = await vault.createVault(memberId, key, coordinates);
     logger.log({
       level: "info",
       message: "Created a vault",
@@ -161,6 +162,103 @@ router.get("/:vaultId/members", async (req, res) => {
     logger.log({
       level: "error",
       message: `Failed to fetch members of a specific vault: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
+// POST Create an asset in the vault(and add the asset to that vault)
+router.post("/:vaultId/assets/create", async (req, res) => {
+  const { vaultId } = req.params;
+  const { text } = req.body;
+  try {
+    const data = await asset.createAsset(vaultId, text);
+    logger.log({
+      level: "info",
+      message: "Created an asset",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to create an asset: ${err}`,
+    });
+    res.status(400).send({ error: err });
+  }
+});
+
+// GET Assets of a specific vault
+router.get("/:vaultId/assets", async (req, res) => {
+  const { vaultId } = req.params;
+  const { page, pageLimit } = req.query;
+  try {
+    let data = await asset.getAssetsByVaultId(vaultId, page, pageLimit);
+    logger.log({
+      level: "info",
+      message: "Fetched assets of a specific vault",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to fetch assets of a specific vault: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
+// DELETE Asset from a specific vault
+router.delete("/assets/:assetId", async (req, res) => {
+  const { assetId } = req.params;
+  try {
+    let data = await asset.deleteAssetById(assetId);
+    logger.log({
+      level: "info",
+      message: "Deleted asset",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to delete asset: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
+// DELETE All asset from a specific vault
+router.delete("/:vaultId/assets", async (req, res) => {
+  const { vaultId } = req.params;
+  try {
+    let data = await asset.deleteAssetsByVaultId(vaultId);
+    logger.log({
+      level: "info",
+      message: "Deleting vault assets",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to delete vault assets: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
+// DELETE All assets of a specific member
+router.delete("/members/:memberId/assets", async (req, res) => {
+  const { memberId } = req.params;
+  try {
+    let data = await asset.deleteAssetsByMemberId(memberId);
+    logger.log({
+      level: "info",
+      message: "Deleting all assets for a member",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to delete all assets for a member: ${err}`,
     });
     res.status(404).send({ error: err });
   }

@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Asset.belongsTo(models.Vault, {
+      Asset.belongsToMany(models.Vault, {
         through: "VaultAsset",
         foreignKey: {
           name: "assetId",

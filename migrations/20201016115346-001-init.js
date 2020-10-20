@@ -25,6 +25,12 @@ module.exports = {
           notEmpty: true,
         },
       },
+      creatorId: {
+        allowNull: false,
+        autoIncrement: false,
+        primaryKey: false,
+        type: Sequelize.INTEGER,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -44,6 +50,10 @@ module.exports = {
       fields: ["location"],
       concurrently: true,
       type: "SPATIAL",
+    });
+    await queryInterface.addIndex("Vaults", {
+      fields: ["creatorId"],
+      concurrently: true,
     });
     await queryInterface.createTable("Members", {
       id: {
@@ -189,7 +199,7 @@ module.exports = {
       },
       assetId: {
         type: Sequelize.INTEGER,
-        unique: false,
+        unique: true,
         allowNull: false,
         validate: {
           notEmpty: true,

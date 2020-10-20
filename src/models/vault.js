@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         through: "VaultAsset",
         foreignKey: {
           name: "vaultId",
-          allowNull: false,
+          allowNull: true,
         },
       });
     }

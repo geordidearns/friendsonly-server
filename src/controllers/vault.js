@@ -122,7 +122,7 @@ const updateVaultKey = async (vaultId, newKey) => {
   }
 };
 
-const createVault = async (userId, key, coordinates) => {
+const createVault = async (memberId, key, coordinates) => {
   const point = { type: "Point", coordinates: coordinates };
   if (_.isEmpty(coordinates)) {
     throw "Unable to create Vault - No coordinates present";
@@ -134,13 +134,14 @@ const createVault = async (userId, key, coordinates) => {
         {
           key: key,
           location: point,
+          creatorId: memberId,
         },
         { transaction: t }
       );
       await db.VaultMember.create(
         {
           vaultId: vaultData.id,
-          memberId: userId,
+          memberId: memberId,
         },
         { transaction: t }
       );
