@@ -168,7 +168,7 @@ router.get("/check", async (req, res) => {
 router.get("/logout", (req, res) => {
   logger.log({
     level: "info",
-    message: "Member logging out",
+    message: "Logging member out",
   });
   req.session.destroy((err) => {
     logger.log({

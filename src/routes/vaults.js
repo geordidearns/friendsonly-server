@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { v4: uuidv4 } = require("uuid");
 const logger = require("../config/logger.js");
 // Middleware to use for locking endpoints
 const isAuthenticated = require("./utils/isAuthenticated");
