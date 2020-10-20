@@ -3,6 +3,8 @@ const _ = require("lodash");
 const QRCode = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
 
+const asset = require("./asset.js");
+
 let configOptions = {
   raw: true,
   nest: true,
@@ -206,6 +208,17 @@ const validateVaultInviteQRCode = async (vaultId, vaultKey, memberId) => {
 const deleteVaultById = async (vaultId, memberId) => {
   try {
     const result = await db.sequelize.transaction(async (t) => {
+      // Search if the member is the creator of the vault
+      let Vault = await db.Vault.findOne(
+        { where: { id: vaultId, creatorId: memberId }, ...configOptions },
+        { transaction: t }
+      );
+      if (_.isEmpty(Vault)) {
+        throw "Member cannot delete this vault";
+      }
+      // Delete all assets related to the Vault
+      await asset.deleteAssetsByVaultId(vaultId);
+      // Delete all the VaultMembers
       await db.VaultMember.destroy(
         {
           where: { vaultId: vaultId },
@@ -213,7 +226,7 @@ const deleteVaultById = async (vaultId, memberId) => {
         },
         { transaction: t }
       );
-
+      // Delete the Vault
       await db.Vault.destroy(
         {
           where: { id: vaultId, creatorId: memberId },
@@ -222,7 +235,7 @@ const deleteVaultById = async (vaultId, memberId) => {
         { transaction: t }
       );
 
-      return { message: "Vault has been deleted" };
+      return { message: "Vault and its assets have been deleted" };
     });
 
     return result;
@@ -230,6 +243,32 @@ const deleteVaultById = async (vaultId, memberId) => {
     throw "Unable to delete the vault";
   }
 };
+
+// const deleteVaultById = async (vaultId, memberId) => {
+//   try {
+//     const result = await db.sequelize.transaction(async (t) => {
+//       await db.VaultMember.destroy(
+//         {
+//           where: { vaultId: vaultId },
+//           ...configOptions,
+//         },
+//         { transaction: t }
+//       );
+
+//       await db.Vault.destroy(
+//         {
+//           where: { id: vaultId, creatorId: memberId },
+//           ...configOptions,
+//         },
+//         { transaction: t }
+//       );
+//     });
+
+//     return result;
+//   } catch (err) {
+//     throw "Unable to delete the vault";
+//   }
+// };
 
 exports.getVaultById = getVaultById;
 exports.getVaultsByMemberId = getVaultsByMemberId;

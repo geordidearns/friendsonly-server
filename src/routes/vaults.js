@@ -269,7 +269,6 @@ router.delete("/:vaultId/remove", async (req, res) => {
   const { vaultId } = req.params;
   const { memberId } = req.query;
   try {
-    await asset.deleteAssetsByVaultId(vaultId);
     const data = await vault.deleteVaultById(vaultId, memberId);
     logger.log({
       level: "info",
