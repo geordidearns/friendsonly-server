@@ -51,7 +51,7 @@ const assertDatabaseConnectionOk = async () => {
   try {
     await db.sequelize.authenticate();
     logger.log({
-      level: "debug",
+      level: "info",
       message: "Database connection established",
     });
   } catch (error) {

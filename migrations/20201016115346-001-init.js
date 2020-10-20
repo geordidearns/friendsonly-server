@@ -25,8 +25,20 @@ module.exports = {
           notEmpty: true,
         },
       },
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     });
     await queryInterface.addIndex("Vaults", {
       fields: ["location"],
@@ -57,8 +69,20 @@ module.exports = {
         },
       },
       lastLoginAt: Sequelize.INTEGER,
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     });
     await queryInterface.createTable("Assets", {
       id: {
@@ -75,8 +99,20 @@ module.exports = {
           notEmpty: true,
         },
       },
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     });
     await queryInterface.createTable("VaultFriends", {
       id: {
@@ -108,8 +144,20 @@ module.exports = {
           key: "id",
         },
       },
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     });
     await queryInterface.addConstraint("VaultFriends", {
       fields: ["vaultId", "friendId"],
@@ -151,12 +199,62 @@ module.exports = {
           key: "id",
         },
       },
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     });
     await queryInterface.addIndex("VaultAssets", {
       fields: ["vaultId", "assetId"],
       concurrently: true,
+    });
+    await queryInterface.createTable("Session", {
+      sid: {
+        allowNull: false,
+        autoIncrement: false,
+        primaryKey: true,
+        type: Sequelize.STRING(36),
+      },
+      expires: {
+        type: Sequelize.DATE,
+        unique: false,
+        allowNull: true,
+        validate: {
+          notEmpty: false,
+        },
+      },
+      data: {
+        type: Sequelize.TEXT,
+        unique: false,
+        allowNull: true,
+        validate: {
+          notEmpty: false,
+        },
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     });
   },
 
