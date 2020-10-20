@@ -17,10 +17,10 @@ const insertMembers = async () => {
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await insertMembers();
-    queryInterface.bulkInsert("Friends", members);
+    queryInterface.bulkInsert("Members", members);
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete("Friends", null, {});
+    await queryInterface.bulkDelete("Members", null, {});
   },
 };

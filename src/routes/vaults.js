@@ -6,6 +6,7 @@ const logger = require("../config/logger.js");
 const isAuthenticated = require("./utils/isAuthenticated");
 
 const vault = require("../controllers/vault");
+const member = require("../controllers/member");
 
 // TODO: GET all Vaults (Not used external facing)
 router.get("/all", async (req, res) => {
@@ -65,9 +66,9 @@ router.get("/member/invite", async (req, res) => {
 
 // POST Validate QRCode to invite member
 router.post("/member/validate", async (req, res) => {
-  const { vaultId, vaultKey, friendId } = req.body;
+  const { vaultId, vaultKey, memberId } = req.body;
   try {
-    await vault.validateVaultInviteQRCode(vaultId, vaultKey, friendId);
+    await vault.validateVaultInviteQRCode(vaultId, vaultKey, memberId);
     logger.log({
       level: "info",
       message: "Validated a QR Code to invite a member",
@@ -86,9 +87,9 @@ router.post("/member/validate", async (req, res) => {
 
 // GET Closest Vault to member
 router.get("/member/nearby", async (req, res) => {
-  const { friendId, latitude, longitude } = req.query;
+  const { memberId, latitude, longitude } = req.query;
   try {
-    const data = await vault.getClosestVaultById(friendId, {
+    const data = await vault.getClosestVaultById(memberId, {
       latitude: latitude,
       longitude: longitude,
     });
@@ -129,9 +130,9 @@ router.post("/create", async (req, res) => {
 
 // POST Add a member to a vault
 router.post("/members", async (req, res) => {
-  const { vaultId, friendId } = req.body;
+  const { vaultId, memberId } = req.body;
   try {
-    const data = await vault.addMemberToVault(vaultId, friendId);
+    const data = await vault.addMemberToVault(vaultId, memberId);
     logger.log({
       level: "info",
       message: "Added a member to a vault",
@@ -150,7 +151,7 @@ router.post("/members", async (req, res) => {
 router.get("/:vaultId/members", async (req, res) => {
   const { vaultId } = req.params;
   try {
-    let data = await friend.getFriendsByVaultId(vaultId);
+    let data = await member.getMembersByVaultId(vaultId);
     logger.log({
       level: "info",
       message: "Fetched members of a specific vault",

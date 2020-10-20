@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Vault.belongsToMany(models.Friend, {
-        through: "VaultFriend",
+      Vault.belongsToMany(models.Member, {
+        through: "VaultMember",
         foreignKey: {
           name: "vaultId",
           allowNull: false,

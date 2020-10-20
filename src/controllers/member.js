@@ -7,9 +7,9 @@ let configOptions = {
   order: [["id", "ASC"]],
 };
 
-const getFriendsByVaultId = async (vaultId) => {
+const getMembersByVaultId = async (vaultId) => {
   try {
-    const data = await db.Friend.findAll({
+    const data = await db.Member.findAll({
       attributes: ["id", "email"],
       include: [
         {
@@ -31,9 +31,9 @@ const getFriendsByVaultId = async (vaultId) => {
   }
 };
 
-const getAllFriends = async () => {
+const getAllMembers = async () => {
   try {
-    const data = await db.Friend.findAll({
+    const data = await db.Member.findAll({
       attributes: ["id", "email"],
       ...configOptions,
     });
@@ -53,7 +53,7 @@ const createMember = async (issuer, email, lastLoginAt) => {
     if (!issuer || !email || !lastLoginAt) {
       throw "Incorrect parameters passed to create a member";
     }
-    return await db.Friend.create({
+    return await db.Member.create({
       issuer,
       email,
       lastLoginAt,
@@ -68,7 +68,7 @@ const findMemberByIssuer = async (issuer) => {
     if (!issuer) {
       throw "No issuer passed to find a member";
     }
-    return await db.Friend.findOne({
+    return await db.Member.findOne({
       attributes: ["id", "issuer", "email", "lastLoginAt"],
       where: { issuer: issuer },
       ...configOptions,
@@ -80,7 +80,7 @@ const findMemberByIssuer = async (issuer) => {
 
 const updateMemberByIssuer = async (issuer, properties, isSilent) => {
   try {
-    return await db.Vault.update(properties, {
+    return await db.Member.update(properties, {
       attributes: ["id", "issuer", "email", "lastLoginAt"],
       where: {
         issuer: issuer,
@@ -93,12 +93,12 @@ const updateMemberByIssuer = async (issuer, properties, isSilent) => {
   }
 };
 
-const updateMember = async (friendId, properties, isSilent) => {
+const updateMember = async (memberId, properties, isSilent) => {
   try {
-    return await db.Vault.update(properties, {
+    return await db.Member.update(properties, {
       attributes: ["id", "issuer", "email", "lastLoginAt"],
       where: {
-        id: friendId,
+        id: memberId,
       },
       silent: isSilent,
       ...configOptions,
@@ -108,8 +108,8 @@ const updateMember = async (friendId, properties, isSilent) => {
   }
 };
 
-exports.getFriendsByVaultId = getFriendsByVaultId;
-exports.getAllFriends = getAllFriends;
+exports.getMembersByVaultId = getMembersByVaultId;
+exports.getAllMembers = getAllMembers;
 exports.createMember = createMember;
 exports.findMemberByIssuer = findMemberByIssuer;
 exports.updateMemberByIssuer = updateMemberByIssuer;

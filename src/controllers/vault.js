@@ -28,14 +28,14 @@ const getVaultById = async (vaultId) => {
   }
 };
 
-const getVaultsByFriendId = async (friendId) => {
+const getVaultsByMemberId = async (memberId) => {
   try {
     const data = await db.Vault.findAll({
       attributes: ["id", "key", "location", "updatedAt"],
       include: [
         {
-          model: db.Friend,
-          where: { id: friendId },
+          model: db.Member,
+          where: { id: memberId },
           attributes: [],
         },
       ],
@@ -53,26 +53,26 @@ const getVaultsByFriendId = async (friendId) => {
 };
 
 // Pass in latitude and longitude from client in query params
-const getClosestVaultById = async (friendId, coordinates) => {
+const getClosestVaultById = async (memberId, coordinates) => {
   try {
-    if (!friendId || _.isEmpty(coordinates)) {
+    if (!memberId || _.isEmpty(coordinates)) {
       throw "Incorrect parameters passed to find the nearest Vault";
     }
     const data = await db.sequelize.query(
       `select distinct
         "Vaults".id, "Vaults".key, "Vaults".location, ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography)
       from 
-      "Vaults", "VaultFriends", "Friends" where ST_DWithin(location, ST_MakePoint(:latitude,:longitude)::geography, :range) 
+      "Vaults", "VaultMembers", "Members" where ST_DWithin(location, ST_MakePoint(:latitude,:longitude)::geography, :range) 
       and 
-      "Vaults".id = "VaultFriends"."vaultId" 
+      "Vaults".id = "VaultMembers"."vaultId" 
       and 
-      "VaultFriends"."friendId" = :friendId  
+      "VaultMembers"."memberId" = :memberId  
       order by 
       ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography) 
       limit :limit;`,
       {
         replacements: {
-          friendId: friendId,
+          memberId: memberId,
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           range: 20,
@@ -137,10 +137,10 @@ const createVault = async (userId, key, coordinates) => {
         },
         { transaction: t }
       );
-      await db.VaultFriend.create(
+      await db.VaultMember.create(
         {
           vaultId: vaultData.id,
-          friendId: userId,
+          memberId: userId,
         },
         { transaction: t }
       );
@@ -154,14 +154,14 @@ const createVault = async (userId, key, coordinates) => {
   }
 };
 
-const addMemberToVault = async (vaultId, friendId) => {
+const addMemberToVault = async (vaultId, memberId) => {
   try {
-    if (!vaultId || !friendId) {
+    if (!vaultId || !memberId) {
       throw "Incorrect parameters passed to add a member to a vault";
     }
-    return await db.VaultFriend.create({
+    return await db.VaultMember.create({
       vaultId: vaultId,
-      friendId: friendId,
+      memberId: memberId,
     });
   } catch (err) {
     throw "Member is already in this vault";
@@ -188,14 +188,14 @@ const getVaultInviteQRCode = async (vaultId, vaultKey) => {
   }
 };
 
-const validateVaultInviteQRCode = async (vaultId, vaultKey, friendId) => {
+const validateVaultInviteQRCode = async (vaultId, vaultKey, memberId) => {
   try {
     const newKey = uuidv4();
     const vault = await getVaultById(vaultId);
     if (vault.key !== vaultKey) {
       throw "This QR Code has been used before. Ask your friend to generate a new code to join this vault";
     }
-    await addMemberToVault(vault.id, friendId);
+    await addMemberToVault(vault.id, memberId);
     await updateVaultKey(vaultId, newKey);
   } catch (err) {
     throw err;
@@ -203,7 +203,7 @@ const validateVaultInviteQRCode = async (vaultId, vaultKey, friendId) => {
 };
 
 exports.getVaultById = getVaultById;
-exports.getVaultsByFriendId = getVaultsByFriendId;
+exports.getVaultsByMemberId = getVaultsByMemberId;
 exports.getAllVaults = getAllVaults;
 exports.createVault = createVault;
 exports.getClosestVaultById = getClosestVaultById;
