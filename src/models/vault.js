@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         through: "VaultAsset",
         foreignKey: {
           name: "vaultId",
-          allowNull: false,
+          allowNull: true,
         },
       });
     }
@@ -37,6 +37,14 @@ module.exports = (sequelize, DataTypes) => {
       location: {
         type: DataTypes.GEOGRAPHY("POINT", 4326),
         unique: true,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      creatorId: {
+        type: DataTypes.INTEGER,
+        unique: false,
         allowNull: false,
         validate: {
           notEmpty: true,

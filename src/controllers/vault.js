@@ -122,7 +122,7 @@ const updateVaultKey = async (vaultId, newKey) => {
   }
 };
 
-const createVault = async (userId, key, coordinates) => {
+const createVault = async (memberId, key, coordinates) => {
   const point = { type: "Point", coordinates: coordinates };
   if (_.isEmpty(coordinates)) {
     throw "Unable to create Vault - No coordinates present";
@@ -134,13 +134,14 @@ const createVault = async (userId, key, coordinates) => {
         {
           key: key,
           location: point,
+          creatorId: memberId,
         },
         { transaction: t }
       );
       await db.VaultMember.create(
         {
           vaultId: vaultData.id,
-          memberId: userId,
+          memberId: memberId,
         },
         { transaction: t }
       );
@@ -202,6 +203,34 @@ const validateVaultInviteQRCode = async (vaultId, vaultKey, memberId) => {
   }
 };
 
+const deleteVaultById = async (vaultId, memberId) => {
+  try {
+    const result = await db.sequelize.transaction(async (t) => {
+      await db.VaultMember.destroy(
+        {
+          where: { vaultId: vaultId },
+          ...configOptions,
+        },
+        { transaction: t }
+      );
+
+      await db.Vault.destroy(
+        {
+          where: { id: vaultId, creatorId: memberId },
+          ...configOptions,
+        },
+        { transaction: t }
+      );
+
+      return { message: "Vault has been deleted" };
+    });
+
+    return result;
+  } catch (err) {
+    throw "Unable to delete the vault";
+  }
+};
+
 exports.getVaultById = getVaultById;
 exports.getVaultsByMemberId = getVaultsByMemberId;
 exports.getAllVaults = getAllVaults;
@@ -210,3 +239,4 @@ exports.getClosestVaultById = getClosestVaultById;
 exports.addMemberToVault = addMemberToVault;
 exports.getVaultInviteQRCode = getVaultInviteQRCode;
 exports.validateVaultInviteQRCode = validateVaultInviteQRCode;
+exports.deleteVaultById = deleteVaultById;
