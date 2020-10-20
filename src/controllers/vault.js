@@ -203,6 +203,34 @@ const validateVaultInviteQRCode = async (vaultId, vaultKey, memberId) => {
   }
 };
 
+const deleteVaultById = async (vaultId, memberId) => {
+  try {
+    const result = await db.sequelize.transaction(async (t) => {
+      await db.VaultMember.destroy(
+        {
+          where: { vaultId: vaultId },
+          ...configOptions,
+        },
+        { transaction: t }
+      );
+
+      await db.Vault.destroy(
+        {
+          where: { id: vaultId, creatorId: memberId },
+          ...configOptions,
+        },
+        { transaction: t }
+      );
+
+      return { message: "Vault has been deleted" };
+    });
+
+    return result;
+  } catch (err) {
+    throw "Unable to delete the vault";
+  }
+};
+
 exports.getVaultById = getVaultById;
 exports.getVaultsByMemberId = getVaultsByMemberId;
 exports.getAllVaults = getAllVaults;
@@ -211,3 +239,4 @@ exports.getClosestVaultById = getClosestVaultById;
 exports.addMemberToVault = addMemberToVault;
 exports.getVaultInviteQRCode = getVaultInviteQRCode;
 exports.validateVaultInviteQRCode = validateVaultInviteQRCode;
+exports.deleteVaultById = deleteVaultById;

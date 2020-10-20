@@ -264,4 +264,25 @@ router.delete("/members/:memberId/assets", async (req, res) => {
   }
 });
 
+// DELETE A vault (creator only)
+router.delete("/:vaultId/remove", async (req, res) => {
+  const { vaultId } = req.params;
+  const { memberId } = req.query;
+  try {
+    await asset.deleteAssetsByVaultId(vaultId);
+    const data = await vault.deleteVaultById(vaultId, memberId);
+    logger.log({
+      level: "info",
+      message: "Deleted vault and vault assets",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to delete vault: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
 module.exports = router;
