@@ -198,7 +198,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// POST Create a member
+// POST Create a member - TODO: Taken care of by /login
 router.post("/join", async (req, res) => {
   const { issuer, email, key } = req.body;
   try {
