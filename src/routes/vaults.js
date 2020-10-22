@@ -1,13 +1,40 @@
 const express = require("express");
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
+const aws = require("aws-sdk");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
 const logger = require("../config/logger.js");
+const imagemin = require("imagemin");
+const imageminJpegtran = require("imagemin-jpegtran");
+const imageminPngquant = require("imagemin-pngquant");
 // Middleware to use for locking endpoints
 const isAuthenticated = require("./utils/isAuthenticated");
 
 const vault = require("../controllers/vault");
 const member = require("../controllers/member");
 const asset = require("../controllers/asset");
+
+const s3 = new aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "eu-north-1",
+});
+
+// Initialize multers3 with our s3 config and other options
+const upload = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.AWS_BUCKET,
+    acl: "public-read",
+    metadata(req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key(req, file, cb) {
+      cb(null, Date.now().toString() + ".png");
+    },
+  }),
+});
 
 // TODO: GET all Vaults (Not used external facing)
 router.get("/all", async (req, res) => {
@@ -282,6 +309,10 @@ router.delete("/:vaultId/remove", async (req, res) => {
     });
     res.status(404).send({ error: err });
   }
+});
+
+router.post("/upload", upload.single("file"), (req, res, next) => {
+  res.json(req.file);
 });
 
 module.exports = router;

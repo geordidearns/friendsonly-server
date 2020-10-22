@@ -8,7 +8,10 @@ const app = express();
 const { v4: uuidv4 } = require("uuid");
 const db = require("./src/models/index.js");
 const logger = require("./src/config/logger.js");
-require("dotenv").config();
+
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const PORT = 8080;
 
