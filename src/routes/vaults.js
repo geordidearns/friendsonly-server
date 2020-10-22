@@ -4,6 +4,8 @@ const { v4: uuidv4 } = require("uuid");
 const logger = require("../config/logger.js");
 // Middleware to use for locking endpoints
 const isAuthenticated = require("./utils/isAuthenticated");
+// Encryption methods
+const { encrypt } = require("./utils/crypto");
 
 const vault = require("../controllers/vault");
 const member = require("../controllers/member");
@@ -170,9 +172,11 @@ router.get("/:vaultId/members", async (req, res) => {
 // POST Create an asset in the vault(and add the asset to that vault)
 router.post("/:vaultId/assets/create", async (req, res) => {
   const { vaultId } = req.params;
-  const { text } = req.body;
+  const { message } = req.body;
+  const hash = await encrypt(message);
+  console.log("HASH HERE", hash);
   try {
-    const data = await asset.createAsset(vaultId, text);
+    const data = await asset.createAsset(vaultId, hash);
     logger.log({
       level: "info",
       message: "Created an asset",

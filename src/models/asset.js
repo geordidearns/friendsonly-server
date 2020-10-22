@@ -20,8 +20,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Asset.init(
     {
-      text: {
-        type: DataTypes.STRING,
+      message: {
+        type: DataTypes.JSON,
         unique: false,
         allowNull: false,
         validate: {
