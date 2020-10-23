@@ -1,7 +1,8 @@
 const db = require("../models/index.js");
 const _ = require("lodash");
 const vault = require("../models/vault.js");
-const { decrypt } = require("../routes/utils/crypto");
+// Encryption methods
+const { encrypt, decrypt } = require("../routes/utils/crypto");
 
 let configOptions = {
   raw: true,
@@ -20,19 +21,19 @@ const paginate = ({ page, pageLimit }) => {
   };
 };
 
-const createAsset = async (vaultId, message) => {
+const createAsset = async (vaultId, type, data) => {
   try {
-    if (!vaultId || !message) {
+    if (!vaultId || !type || !data) {
       throw "Incorrect parameters passed to create an asset";
     }
 
-    // TODO: Process Asset here?
-
     // Create Asset & add to VaultAssets
+    const encryptedData = await encrypt(data);
     const result = await db.sequelize.transaction(async (t) => {
       const assetData = await db.Asset.create(
         {
-          message,
+          type,
+          data: encryptedData,
         },
         { transaction: t }
       );
@@ -58,14 +59,14 @@ const createAsset = async (vaultId, message) => {
 };
 
 const decryptMessage = async (obj) => {
-  const decryptMessage = await decrypt(obj.message);
-  return { ...obj, message: decryptMessage };
+  const decryptMessage = await decrypt(obj.data);
+  return { ...obj, data: decryptMessage };
 };
 
 const getAssetsByVaultId = async (vaultId, page, pageLimit) => {
   try {
     const data = await db.Asset.findAndCountAll({
-      attributes: ["id", "message", "createdAt"],
+      attributes: ["id", "type", "data", "createdAt"],
       include: [
         {
           model: db.Vault,
@@ -80,8 +81,6 @@ const getAssetsByVaultId = async (vaultId, page, pageLimit) => {
     const decryptedMessages = await Promise.all(
       data.rows.map(async (x) => decryptMessage(x))
     );
-
-    console.log("IM IN HERE NOW", decryptedMessages);
 
     if (_.isEmpty(decryptedMessages)) {
       throw "No assets found";

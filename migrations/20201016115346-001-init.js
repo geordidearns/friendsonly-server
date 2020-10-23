@@ -101,7 +101,15 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      message: {
+      type: {
+        type: Sequelize.STRING,
+        unique: false,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+      data: {
         type: Sequelize.JSON,
         unique: false,
         allowNull: false,
