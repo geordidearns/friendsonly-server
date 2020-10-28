@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
+const aws = require("aws-sdk");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
 const logger = require("../config/logger.js");
 // Middleware to use for locking endpoints
 const isAuthenticated = require("./utils/isAuthenticated");
@@ -8,6 +11,27 @@ const isAuthenticated = require("./utils/isAuthenticated");
 const vault = require("../controllers/vault");
 const member = require("../controllers/member");
 const asset = require("../controllers/asset");
+
+const s3 = new aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "eu-north-1",
+});
+
+// Initialize multers3 with our s3 config and other options
+const upload = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.AWS_BUCKET,
+    acl: "public-read",
+    metadata(req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key(req, file, cb) {
+      cb(null, uuidv4() + ".png");
+    },
+  }),
+});
 
 // TODO: GET all Vaults (Not used external facing)
 router.get("/all", async (req, res) => {
@@ -170,14 +194,14 @@ router.get("/:vaultId/members", async (req, res) => {
 // POST Create an asset in the vault(and add the asset to that vault)
 router.post("/:vaultId/assets/create", async (req, res) => {
   const { vaultId } = req.params;
-  const { text } = req.body;
+  const { type, data } = req.body;
   try {
-    const data = await asset.createAsset(vaultId, text);
+    const result = await asset.createAsset(vaultId, type, data);
     logger.log({
       level: "info",
       message: "Created an asset",
     });
-    res.json({ data: data });
+    res.json({ data: result });
   } catch (err) {
     logger.log({
       level: "error",
@@ -281,6 +305,29 @@ router.delete("/:vaultId/remove", async (req, res) => {
       message: `Failed to delete vault: ${err}`,
     });
     res.status(404).send({ error: err });
+  }
+});
+
+router.post("/:vaultId/upload", upload.single("file"), async (req, res) => {
+  const { vaultId } = req.params;
+  const { type } = req.query;
+  console.log("IMAGE", req.file);
+  try {
+    const result = await asset.createAsset(vaultId, type, {
+      key: req.file.key,
+      url: req.file.location,
+    });
+    logger.log({
+      level: "info",
+      message: "Created an asset",
+    });
+    res.json({ data: result });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to create an asset: ${err}`,
+    });
+    res.status(400).send({ error: err });
   }
 });
 
