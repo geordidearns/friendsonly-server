@@ -27,8 +27,10 @@ const createAsset = async (vaultId, type, data) => {
       throw "Incorrect parameters passed to create an asset";
     }
 
+    // Encrypt the url
+    const encryptedData = await encrypt(JSON.stringify(data));
+
     // Create Asset & add to VaultAssets
-    const encryptedData = await encrypt(data);
     const result = await db.sequelize.transaction(async (t) => {
       const assetData = await db.Asset.create(
         {
@@ -60,7 +62,8 @@ const createAsset = async (vaultId, type, data) => {
 
 const decryptMessage = async (obj) => {
   const decryptMessage = await decrypt(obj.data);
-  return { ...obj, data: decryptMessage };
+  const parsedMessage = JSON.parse(decryptMessage);
+  return { ...obj, data: parsedMessage };
 };
 
 const getAssetsByVaultId = async (vaultId, page, pageLimit) => {
