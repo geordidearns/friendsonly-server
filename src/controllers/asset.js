@@ -21,9 +21,9 @@ const paginate = ({ page, pageLimit }) => {
   };
 };
 
-const createAsset = async (vaultId, type, data) => {
+const createAsset = async (vaultId, uploaderId, type, data) => {
   try {
-    if (!vaultId || !type || !data) {
+    if (!vaultId || !uploaderId || !type || !data) {
       throw "Incorrect parameters passed to create an asset";
     }
 
@@ -34,6 +34,7 @@ const createAsset = async (vaultId, type, data) => {
     const result = await db.sequelize.transaction(async (t) => {
       const assetData = await db.Asset.create(
         {
+          uploaderId: uploaderId,
           type,
           data: encryptedData,
         },

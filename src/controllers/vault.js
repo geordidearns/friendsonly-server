@@ -2,6 +2,11 @@ const db = require("../models/index.js");
 const _ = require("lodash");
 const QRCode = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
+const {
+  uniqueNamesGenerator,
+  adjectives,
+  animals,
+} = require("unique-names-generator");
 
 const asset = require("./asset.js");
 
@@ -12,10 +17,16 @@ let configOptions = {
   order: [["id", "ASC"]],
 };
 
+// let randomVaultName = uniqueNamesGenerator({
+//   dictionaries: [adjectives, animals],
+//   separator: "-",
+//   length: 2,
+// });
+
 const getVaultById = async (vaultId) => {
   try {
     const data = await db.Vault.findOne({
-      attributes: ["id", "key", "location", "updatedAt"],
+      attributes: ["id", "key", "name", "location", "updatedAt"],
       where: { id: vaultId },
       ...configOptions,
     });
@@ -33,7 +44,7 @@ const getVaultById = async (vaultId) => {
 const getVaultsByMemberId = async (memberId) => {
   try {
     const data = await db.Vault.findAll({
-      attributes: ["id", "key", "location", "updatedAt"],
+      attributes: ["id", "key", "name", "location", "updatedAt"],
       include: [
         {
           model: db.Member,
@@ -62,7 +73,7 @@ const getClosestVaultById = async (memberId, coordinates) => {
     }
     const data = await db.sequelize.query(
       `select distinct
-        "Vaults".id, "Vaults".key, "Vaults".location, ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography)
+        "Vaults".id, "Vaults".key, "Vaults".name, "Vaults".location, ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography)
       from 
       "Vaults", "VaultMembers", "Members" where ST_DWithin(location, ST_MakePoint(:latitude,:longitude)::geography, :range) 
       and 
@@ -73,6 +84,7 @@ const getClosestVaultById = async (memberId, coordinates) => {
       ST_Distance(location, ST_MakePoint(:latitude,:longitude)::geography) 
       limit :limit;`,
       {
+        type: db.sequelize.QueryTypes.SELECT,
         replacements: {
           memberId: memberId,
           latitude: coordinates.latitude,
@@ -80,6 +92,7 @@ const getClosestVaultById = async (memberId, coordinates) => {
           range: 20,
           limit: 5,
         },
+
         ...configOptions,
       }
     );
@@ -93,7 +106,7 @@ const getClosestVaultById = async (memberId, coordinates) => {
 const getAllVaults = async () => {
   try {
     const data = await db.Vault.findAll({
-      attributes: ["id", "key", "location"],
+      attributes: ["id", "key", "name", "location"],
       ...configOptions,
     });
 
@@ -112,7 +125,7 @@ const updateVaultKey = async (vaultId, newKey) => {
     return await db.Vault.update(
       { key: newKey },
       {
-        attributes: ["id", "key", "location"],
+        attributes: ["id", "key", "name", "location"],
         where: {
           id: vaultId,
         },
@@ -124,8 +137,16 @@ const updateVaultKey = async (vaultId, newKey) => {
   }
 };
 
-const createVault = async (memberId, key, coordinates) => {
+const createVault = async (memberId, name, coordinates) => {
   const point = { type: "Point", coordinates: coordinates };
+  const vaultName = name
+    ? name
+    : uniqueNamesGenerator({
+        dictionaries: [adjectives, animals],
+        separator: "-",
+        length: 2,
+      });
+  const key = uuidv4();
   if (_.isEmpty(coordinates)) {
     throw "Unable to create Vault - No coordinates present";
   }
@@ -135,6 +156,7 @@ const createVault = async (memberId, key, coordinates) => {
       const vaultData = await db.Vault.create(
         {
           key: key,
+          name: vaultName,
           location: point,
           creatorId: memberId,
         },
@@ -153,7 +175,7 @@ const createVault = async (memberId, key, coordinates) => {
 
     return result;
   } catch (err) {
-    throw "Vault cannot be created";
+    throw `Vault cannot be created: ${err}`;
   }
 };
 

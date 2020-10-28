@@ -34,6 +34,14 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
+      name: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
       location: {
         type: DataTypes.GEOGRAPHY("POINT", 4326),
         unique: true,

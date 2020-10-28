@@ -134,11 +134,10 @@ router.get("/member/nearby", async (req, res) => {
 
 // POST Create a vault (and add member to that vault)
 router.post("/create", async (req, res) => {
-  const { latitude, longitude, memberId } = req.body;
-  const key = uuidv4();
+  const { latitude, longitude, memberId, name } = req.body;
   const coordinates = [latitude, longitude];
   try {
-    const data = await vault.createVault(memberId, key, coordinates);
+    const data = await vault.createVault(memberId, name, coordinates);
     logger.log({
       level: "info",
       message: "Created a vault",
@@ -194,9 +193,9 @@ router.get("/:vaultId/members", async (req, res) => {
 // POST Create an asset in the vault(and add the asset to that vault)
 router.post("/:vaultId/assets/create", async (req, res) => {
   const { vaultId } = req.params;
-  const { type, data } = req.body;
+  const { uploaderId, type, data } = req.body;
   try {
-    const result = await asset.createAsset(vaultId, type, data);
+    const result = await asset.createAsset(vaultId, uploaderId, type, data);
     logger.log({
       level: "info",
       message: "Created an asset",
@@ -310,10 +309,10 @@ router.delete("/:vaultId/remove", async (req, res) => {
 
 router.post("/:vaultId/upload", upload.single("file"), async (req, res) => {
   const { vaultId } = req.params;
-  const { type } = req.query;
-  console.log("IMAGE", req.file);
+  const { uploaderId, type } = req.query;
+  console.log("IN UPLOAD", vaultId, uploaderId, type);
   try {
-    const result = await asset.createAsset(vaultId, type, {
+    const result = await asset.createAsset(vaultId, uploaderId, type, {
       key: req.file.key,
       url: req.file.location,
     });
