@@ -233,8 +233,9 @@ router.get("/:vaultId/assets", async (req, res) => {
 // DELETE Asset from a specific vault
 router.delete("/assets/:assetId", async (req, res) => {
   const { assetId } = req.params;
+  const { assetKey } = req.query;
   try {
-    let data = await asset.deleteAssetById(assetId);
+    let data = await asset.deleteAsset(assetId, assetKey);
     logger.log({
       level: "info",
       message: "Deleted asset",

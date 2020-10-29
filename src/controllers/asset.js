@@ -1,4 +1,5 @@
 const db = require("../models/index.js");
+const aws = require("aws-sdk");
 const _ = require("lodash");
 const vault = require("../models/vault.js");
 // Encryption methods
@@ -10,6 +11,12 @@ let configOptions = {
   benchmark: true,
   order: [["id", "ASC"]],
 };
+
+const s3 = new aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "eu-north-1",
+});
 
 const paginate = ({ page, pageLimit }) => {
   const offset = page * pageLimit;
@@ -96,7 +103,8 @@ const getAssetsByVaultId = async (vaultId, page, pageLimit) => {
   }
 };
 
-const deleteAssetById = async (assetId) => {
+const deleteAsset = async (assetId, assetKey) => {
+  const params = { Bucket: process.env.AWS_BUCKET, Key: assetKey };
   try {
     const result = await db.sequelize.transaction(async (t) => {
       await db.VaultAsset.destroy(
@@ -114,6 +122,10 @@ const deleteAssetById = async (assetId) => {
         },
         { transaction: t }
       );
+
+      s3.deleteObject(params, (err, data) => {
+        if (err) throw err;
+      });
 
       return { message: "Asset has been deleted" };
     });
@@ -136,9 +148,24 @@ const deleteAssetsByVaultId = async (vaultId) => {
       ...configOptions,
     });
     const deleteIds = data.map((x) => x.id);
+    const decryptedObjs = await Promise.all(
+      data.map(async (x) => decryptMessage(x))
+    );
+    const keys = decryptedObjs.map((x) => {
+      return {
+        Key: x.data.key,
+      };
+    });
 
     await db.VaultAsset.destroy({ where: { id: deleteIds } });
     await db.Asset.destroy({ where: { id: deleteIds } });
+
+    s3.deleteObjects(
+      { Bucket: process.env.AWS_BUCKET, Delete: { Objects: keys } },
+      (err, data) => {
+        if (err) throw err;
+      }
+    );
 
     return { message: "All vault assets have been deleted" };
   } catch (err) {
@@ -151,5 +178,5 @@ const deleteAssetsByVaultId = async (vaultId) => {
 
 exports.createAsset = createAsset;
 exports.getAssetsByVaultId = getAssetsByVaultId;
-exports.deleteAssetById = deleteAssetById;
+exports.deleteAsset = deleteAsset;
 exports.deleteAssetsByVaultId = deleteAssetsByVaultId;
