@@ -17,6 +17,14 @@ module.exports = {
           notEmpty: true,
         },
       },
+      name: {
+        type: Sequelize.STRING,
+        unique: false,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
       location: {
         type: Sequelize.GEOGRAPHY("POINT", 4326),
         unique: false,
@@ -117,6 +125,11 @@ module.exports = {
           notEmpty: true,
         },
       },
+      uploaderId: {
+        allowNull: false,
+        autoIncrement: false,
+        type: Sequelize.INTEGER,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -131,6 +144,10 @@ module.exports = {
           notEmpty: true,
         },
       },
+    });
+    await queryInterface.addIndex("Assets", {
+      fields: ["uploaderId"],
+      concurrently: true,
     });
     await queryInterface.createTable("VaultMembers", {
       id: {

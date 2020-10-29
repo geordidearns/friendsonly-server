@@ -36,6 +36,14 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
+      uploaderId: {
+        type: DataTypes.INTEGER,
+        unique: false,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

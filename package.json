@@ -25,6 +25,7 @@
     "qrcode": "^1.4.4",
     "sequelize": "^6.3.5",
     "sequelize-auto-migrations": "^1.0.3",
+    "unique-names-generator": "^4.3.1",
     "uuid": "^8.3.1",
     "winston": "^3.3.3"
   },
