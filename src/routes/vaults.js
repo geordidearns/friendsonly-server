@@ -230,6 +230,25 @@ router.get("/:vaultId/assets", async (req, res) => {
   }
 });
 
+// GET Assets of a specific member
+router.get("/assets/:memberId", async (req, res) => {
+  const { memberId } = req.params;
+  try {
+    let data = await asset.getAssetsByMemberId(memberId);
+    logger.log({
+      level: "info",
+      message: "Fetched assets of a specific member",
+    });
+    res.json({ data: data });
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `Failed to fetch assets of a specific member: ${err}`,
+    });
+    res.status(404).send({ error: err });
+  }
+});
+
 // DELETE Asset from a specific vault
 router.delete("/assets/:assetId", async (req, res) => {
   const { assetId } = req.params;

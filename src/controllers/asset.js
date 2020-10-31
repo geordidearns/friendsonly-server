@@ -103,6 +103,28 @@ const getAssetsByVaultId = async (vaultId, page, pageLimit) => {
   }
 };
 
+const getAssetsByMemberId = async (memberId) => {
+  try {
+    const data = await db.Asset.findAndCountAll({
+      attributes: ["id", "type", "data", "createdAt"],
+      where: { uploaderId: memberId },
+      ...configOptions,
+    });
+
+    const decryptedMessages = await Promise.all(
+      data.rows.map(async (x) => decryptMessage(x))
+    );
+
+    if (_.isEmpty(decryptedMessages)) {
+      throw "No assets found";
+    }
+
+    return decryptedMessages;
+  } catch (err) {
+    throw err;
+  }
+};
+
 const deleteAsset = async (assetId, assetKey) => {
   const params = { Bucket: process.env.AWS_BUCKET, Key: assetKey };
   try {
@@ -123,9 +145,11 @@ const deleteAsset = async (assetId, assetKey) => {
         { transaction: t }
       );
 
-      s3.deleteObject(params, (err, data) => {
-        if (err) throw err;
-      });
+      if (assetKey) {
+        await s3.deleteObject(params, (err, data) => {
+          if (err) throw err;
+        });
+      }
 
       return { message: "Asset has been deleted" };
     });
@@ -173,10 +197,45 @@ const deleteAssetsByVaultId = async (vaultId) => {
   }
 };
 
-// TODO: Delete all assets by member id
+const deleteAssetsByMemberId = async (memberId) => {
+  try {
+    const data = await db.Asset.findAll({
+      where: { uploaderId: memberId },
+      ...configOptions,
+    });
+    const deleteIds = data.map((x) => x.id);
+    const decryptedObjs = await Promise.all(
+      data.map(async (x) => decryptMessage(x))
+    );
+    const keys = decryptedObjs.map((x) => {
+      return {
+        Key: x.data.key,
+      };
+    });
+
+    await db.VaultAsset.destroy({ where: { id: deleteIds } });
+    await db.Asset.destroy({ where: { id: deleteIds } });
+
+    if (!_.isEmpty(keys)) {
+      s3.deleteObjects(
+        { Bucket: process.env.AWS_BUCKET, Delete: { Objects: keys } },
+        (err, data) => {
+          if (err) throw err;
+        }
+      );
+    }
+
+    return { message: "All vault assets have been deleted for this member" };
+  } catch (err) {
+    throw "Unable to delete the assets";
+  }
+};
+
 // TODO: Delet assets in vault by member id
 
 exports.createAsset = createAsset;
 exports.getAssetsByVaultId = getAssetsByVaultId;
+exports.getAssetsByMemberId = getAssetsByMemberId;
 exports.deleteAsset = deleteAsset;
 exports.deleteAssetsByVaultId = deleteAssetsByVaultId;
+exports.deleteAssetsByMemberId = deleteAssetsByMemberId;

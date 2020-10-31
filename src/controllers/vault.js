@@ -90,7 +90,7 @@ const getClosestVaultById = async (memberId, coordinates) => {
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           range: 20,
-          limit: 5,
+          limit: 1,
         },
 
         ...configOptions,
